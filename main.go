@@ -54,17 +54,18 @@ func (n *Network) startNode(node *Node) {
 }
 
 func (n *Network) startServer(node *Node) {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		msg := r.URL.Path[1:]
+	path := fmt.Sprintf("/node%d", node.ID)
+
+	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		msg := r.URL.Path[len(path):]
 		node.Inbound <- msg
 		fmt.Fprintf(w, "Node %d received message: %s", node.ID, msg)
 	})
 
 	port := fmt.Sprintf(":%d", 9000+node.ID)
-	fmt.Printf("Node %d listening on port %s\n", node.ID, port)
+	fmt.Printf("Node %d listening on path %s\n", node.ID, path)
 	http.ListenAndServe(port, nil)
 }
-
 func (n *Network) sendMessage(srcNodeID int, destNodeID int, msg string) {
 	n.Nodes[srcNodeID-1].Outbound <- msg
 	n.Nodes[destNodeID-1].Inbound <- msg
