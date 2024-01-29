@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"net/http"
 	"time"
 )
 
@@ -30,6 +31,7 @@ func NewNetwork(nodeCount int) *Network {
 		node := NewNode(i)
 		network.Nodes = append(network.Nodes, node)
 		go network.startNode(node)
+		go network.startServer(node)
 	}
 	return network
 }
@@ -49,6 +51,18 @@ func (n *Network) startNode(node *Node) {
 			fmt.Printf("Node %d delivered message: %s\n", node.ID, msg)
 		}
 	}
+}
+
+func (n *Network) startServer(node *Node) {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		msg := r.URL.Path[1:]
+		node.Inbound <- msg
+		fmt.Fprintf(w, "Node %d received message: %s", node.ID, msg)
+	})
+
+	port := fmt.Sprintf(":%d", 9000+node.ID)
+	fmt.Printf("Node %d listening on port %s\n", node.ID, port)
+	http.ListenAndServe(port, nil)
 }
 
 func (n *Network) sendMessage(srcNodeID int, destNodeID int, msg string) {
