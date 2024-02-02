@@ -44,10 +44,28 @@ func (n *Network) StartNode(node *Node) {
 		select {
 		case msg := <-node.Inbound:
 			fmt.Printf("Node %d received message: %s\n", node.ID, msg)
+
+			// Check if the current node is the action node (node 4)
+			if node.ID == 4 {
+				fmt.Println("Action node reached. Making HTTP request to google.com.")
+
+				// Make an HTTP request to google.com
+				resp, err := http.Get("http://google.com")
+				if err != nil {
+					fmt.Println("Error making HTTP request:", err)
+				} else {
+					defer resp.Body.Close()
+					fmt.Println("HTTP request to google.com successful.")
+				}
+
+				fmt.Println("Stopping.")
+				return
+			}
+
 			// Simulate message forwarding (pseudo-anonymity)
 			time.Sleep(time.Millisecond * time.Duration(rand.Intn(100)))
-			// Forward the message to a random node
-			destNodeID := rand.Intn(len(n.Nodes)) + 1
+			// Forward the message to the next node in a deterministic sequence
+			destNodeID := (node.ID % len(n.Nodes)) + 1
 			n.Nodes[destNodeID-1].Inbound <- msg
 
 			// Increment the counter
@@ -65,7 +83,6 @@ func (n *Network) StartNode(node *Node) {
 		}
 	}
 }
-
 func (n *Network) StartServer(node *Node) {
 	path := fmt.Sprintf("/node%d", node.ID)
 

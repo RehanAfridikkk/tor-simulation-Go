@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 	"tor/structure"
@@ -11,7 +12,10 @@ import (
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
-	nodeCount := 5
+	var nodeCount int
+	fmt.Print("Enter the number of nodes: ")
+	fmt.Scan(&nodeCount)
+
 	network := structure.NewNetwork(nodeCount)
 
 	srcNodeID := rand.Intn(nodeCount) + 1
