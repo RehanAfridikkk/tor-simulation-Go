@@ -88,6 +88,15 @@ func (n *Network) StartServer(node *Node) {
 
 	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		msg := r.URL.Path[len(path):]
+
+		// Check if the current node is the action node (node 4)
+		if node.ID == 4 {
+			fmt.Println("Action node reached. Redirecting to google.com.")
+			http.Redirect(w, r, "http://google.com", http.StatusSeeOther)
+			return
+		}
+
+		// Forward the message to the node's inbound channel
 		node.Inbound <- msg
 		fmt.Fprintf(w, "Node %d received message: %s", node.ID, msg)
 	})
